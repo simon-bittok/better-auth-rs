@@ -1,0 +1,11 @@
+/target
+
+## Env vars configs
+*.fish
+*.env
+
+## Production config
+production.yaml
+
+## Keys
+*.pem
