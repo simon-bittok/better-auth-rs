@@ -20,7 +20,7 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> ConfigResult<Self> {
-        let env = Environment::current();
+        let env: Environment = Environment::current();
         Self::from_env(&env)
     }
 
@@ -30,7 +30,7 @@ impl Config {
 
         let filename: String = format!("{env}.yaml");
 
-        let settings: config::Config = config::Config::builder()
+        let config: config::Config = config::Config::builder()
             .add_source(config::File::from(config_dir.join(filename)))
             .add_source(
                 config::Environment::with_prefix("APP")
@@ -39,7 +39,7 @@ impl Config {
             )
             .build()?;
 
-        settings
+        config
             .try_deserialize::<Self>()
             .map_err(ConfigError::Config)
     }

@@ -29,7 +29,9 @@ pub fn on_request(request: &Request<Body>, span: &Span) {
             .get::<ConnectInfo<SocketAddr>>()
             .map_or_else(
                 || field::display(String::from("<unkown>")),
-                |connect_info| field::display(connect_info.ip().to_string()),
+                |connect_info: &ConnectInfo<SocketAddr>| {
+                    field::display(connect_info.ip().to_string())
+                },
             ),
     );
 
@@ -40,7 +42,7 @@ pub fn on_response(response: &Response<Body>, latency: Duration, span: &Span) {
     span.record("status", field::display(response.status()));
     span.record(
         "latency",
-        field::display(format!("{}µs", latency.as_millis())),
+        field::display(format!("{}µs", latency.as_micros())),
     );
 
     tracing::info!("Response");

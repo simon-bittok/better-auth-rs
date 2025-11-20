@@ -103,7 +103,7 @@ impl Logger {
     }
 
     fn env_filter(&self) -> ConfigResult<EnvFilter> {
-        let mut env_filter = match EnvFilter::try_from_default_env() {
+        let mut env_filter: EnvFilter = match EnvFilter::try_from_default_env() {
             Ok(env_filter) => env_filter,
             Err(from_env_err) => {
                 if let Some(err) = from_env_err.source() {
@@ -179,8 +179,8 @@ impl Logger {
     pub fn directives(&self) -> ConfigResult<Vec<Directive>> {
         self.crates
             .iter()
-            .map(|c| -> ConfigResult<Directive> {
-                let str_directive = format!("{}={}", c, &self.level);
+            .map(|c: &String| -> ConfigResult<Directive> {
+                let str_directive: String = format!("{}={}", c, &self.level);
                 Ok(Directive::from_str(&str_directive)?)
             })
             .collect()
