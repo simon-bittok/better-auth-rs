@@ -16,6 +16,10 @@ use tracing_subscriber::{
 
 use super::{ConfigError, ConfigResult};
 
+/// Logging level configuration.
+///
+/// Determines the minimum severity level for log messages to be recorded.
+/// Can be configured via YAML or environment variables.
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub enum Level {
     #[serde(rename = "off")]
@@ -50,6 +54,9 @@ impl Display for Level {
     }
 }
 
+/// Log output format configuration.
+///
+/// Determines how log messages are formatted when written to output.
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub enum Format {
     #[serde(rename = "compact")]
@@ -78,6 +85,11 @@ impl Display for Format {
     }
 }
 
+/// Logger configuration for the application.
+///
+/// Configures the tracing subscriber with the specified level, format,
+/// and per-crate log directives. Supports environment variable overrides
+/// via `RUST_LOG`.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Logger {
     level: Level,
@@ -86,6 +98,20 @@ pub struct Logger {
 }
 
 impl Logger {
+    /// Initializes the global tracing subscriber with the configured settings.
+    ///
+    /// Sets up the tracing subscriber with the specified:
+    /// - [`Format`],
+    /// - [`Level`] and
+    /// - per-crate directives.
+    ///
+    /// This should be called once at application startup.
+    ///
+    /// ## Errors
+    ///
+    /// * Environment filter parsing errors
+    /// * Invalid log directive format
+    /// * Subscriber already initialized
     pub fn setup(&self) -> ConfigResult<()> {
         let env_filter_layer = self.env_filter()?;
         let registry = tracing_subscriber::registry()
@@ -102,6 +128,14 @@ impl Logger {
         Ok(())
     }
 
+    /// Creates an [`EnvFilter`] from configuration and environment variables.
+    ///
+    /// Checks for `RUST_LOG` environment variable first. If not present, uses
+    /// the configured level and crate directives.
+    ///
+    /// ## Errors
+    /// * Invalid `RUST_LOG` environment variable format
+    /// * Invalid directive format in configuration
     fn env_filter(&self) -> ConfigResult<EnvFilter> {
         let mut env_filter: EnvFilter = match EnvFilter::try_from_default_env() {
             Ok(env_filter) => env_filter,
@@ -131,6 +165,7 @@ impl Logger {
         Ok(env_filter)
     }
 
+    #[allow(clippy::unused_self)]
     fn base_fmt_layer<S>(&self) -> FmtLayer<S>
     where
         S: Subscriber + for<'a> LookupSpan<'a>,
@@ -168,14 +203,23 @@ impl Logger {
             .with_line_number(false)
     }
 
+    #[must_use]
     pub fn level(&self) -> &Level {
         &self.level
     }
 
+    #[must_use]
     pub fn format(&self) -> &Format {
         &self.format
     }
 
+    /// Converts the configured crates list into tracing [`Directive`]
+    ///
+    /// Creates a directive for each crate in the format `crate=level`,
+    /// using the configured log level.
+    ///
+    /// ## Errors
+    /// * Invalid directive format (malformed crate name)
     pub fn directives(&self) -> ConfigResult<Vec<Directive>> {
         self.crates
             .iter()

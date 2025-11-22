@@ -48,6 +48,7 @@ pub fn on_response(response: &Response<Body>, latency: Duration, span: &Span) {
     tracing::info!("Response");
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn on_failure(error: ServerErrorsFailureClass, latency: Duration, span: &Span) {
     span.record("error", field::display(error.to_string()));
     span.record(
