@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
 use axum::{Router, routing::get};
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 
-use crate::{config::Config, trace};
+use crate::{AppContext, config::Config, trace};
 
 use super::Result;
 
@@ -14,6 +16,8 @@ impl App {
 
         config.logger().setup()?;
 
+        let ctx = Arc::new(AppContext::from_config(&config).await);
+
         let router = Router::new()
             .route("/", get(|| async { "Hello from axum" }))
             .layer(
@@ -22,7 +26,8 @@ impl App {
                     .on_request(trace::on_request)
                     .on_response(trace::on_response)
                     .on_failure(trace::on_failure),
-            );
+            )
+            .with_state(ctx.clone());
 
         let listener = TcpListener::bind(config.server().address()).await?;
 

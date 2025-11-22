@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use sqlx::{ConnectOptions, PgPool, postgres::PgConnectOptions};
+use sqlx::{ConnectOptions, PgPool, migrate::Migrator, postgres::PgConnectOptions};
 use tracing::log::LevelFilter;
 
 use crate::config::ConfigResult;
@@ -49,6 +49,9 @@ pub struct DatabaseConfig {
     host: String,
     name: String,
     port: u16,
+    truncate: bool,
+    recreate: bool,
+    auto_migrate: bool,
 }
 
 impl DatabaseConfig {
@@ -156,5 +159,42 @@ impl DatabaseConfig {
     /// ```
     pub async fn connect_using_uri(&self) -> ConfigResult<PgPool> {
         PgPool::connect_lazy(&self.uri).map_err(Into::into)
+    }
+
+    pub fn truncate(&self) -> bool {
+        self.truncate
+    }
+
+    pub fn recreate(&self) -> bool {
+        self.recreate
+    }
+
+    pub fn auto_migrate(&self) -> bool {
+        self.auto_migrate
+    }
+
+    pub async fn init(&self) -> ConfigResult<()> {
+        let pool = self.connect_using_options().await;
+        let migrator = Migrator::new(std::path::Path::new("migrations")).await?;
+
+        let migrations = migrator.iter().count() as i64;
+
+        if self.recreate && self.auto_migrate {
+            // truncate the db then migrate again
+            migrator.undo(&pool, migrations).await?;
+            migrator.run(&pool).await?;
+
+            return Ok(());
+        }
+
+        if self.recreate {
+            migrator.undo(&pool, migrations).await?;
+        }
+
+        if self.auto_migrate {
+            migrator.run(&pool).await?;
+        }
+
+        Ok(())
     }
 }

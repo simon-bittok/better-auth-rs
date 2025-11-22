@@ -84,6 +84,17 @@ pub enum ConfigError {
     #[error(transparent)]
     IO(#[from] std::io::Error),
 
+    /// Error migrating the database
+    ///
+    /// Wraps the `sqlx::migrate::MigrateError`, which occurs when:
+    /// - The migration folder is missing
+    /// - The SQL file contains errors
+    /// -  DATABASE_URL is not set
+    ///
+    /// Maybe returned by `DatabaseConfig::migrate()` function.
+    #[error(transparent)]
+    MigrateError(#[from] sqlx::migrate::MigrateError),
+
     /// Error parsing tracing filter directives.
     ///
     /// Wraps `tracing_subscriber::filter::ParseError`, which occurs when:

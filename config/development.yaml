@@ -21,3 +21,9 @@ database:
   password: postgres
   user: postgres
   protocol: postgresql
+  # Migrate the database on application startup
+  auto_migrate: true
+  ## Dangerous operations that will either clear data from all tables
+  ##  or recreate the entire database, both resulting in data losses
+  truncate: false
+  recreate: false
