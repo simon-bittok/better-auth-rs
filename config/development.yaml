@@ -12,3 +12,12 @@ logger:
     - "axum"
     - "sqlx"
     - "tower-http"
+
+database:
+  uri: postgresql://postgres:postgres@localhost:5432/postgres
+  name: postgres
+  host: localhost
+  port: 5432
+  password: postgres
+  user: postgres
+  protocol: postgresql

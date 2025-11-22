@@ -1,3 +1,4 @@
+mod db;
 mod error;
 mod server;
 mod telemetry;
@@ -5,6 +6,8 @@ mod telemetry;
 use std::path::PathBuf;
 
 use serde::Deserialize;
+
+use crate::config::db::DatabaseConfig;
 
 pub use self::{
     error::{ConfigError, ConfigResult},
@@ -16,6 +19,7 @@ pub use self::{
 pub struct Config {
     server: ServerConfig,
     logger: Logger,
+    database: DatabaseConfig,
 }
 
 impl Config {
@@ -50,6 +54,10 @@ impl Config {
 
     pub fn logger(&self) -> &Logger {
         &self.logger
+    }
+
+    pub fn database(&self) -> &DatabaseConfig {
+        &self.database
     }
 }
 
