@@ -15,6 +15,7 @@ impl App {
         let config = Config::load()?;
 
         config.logger().setup()?;
+        config.database().init().await?;
 
         let ctx = Arc::new(AppContext::from_config(&config).await);
 
