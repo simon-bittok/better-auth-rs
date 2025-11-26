@@ -2,6 +2,7 @@ pub mod app;
 pub mod config;
 pub mod context;
 pub mod errors;
+pub mod models;
 pub(crate) mod trace;
 
 pub use self::{
