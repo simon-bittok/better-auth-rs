@@ -4,6 +4,8 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
     name VARCHAR(255),
+    avatar_url TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
     email_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
@@ -19,8 +21,11 @@ CREATE TABLE oauth_accounts (
     access_token TEXT,
     refresh_token TEXT,
     expires_at TIMESTAMPTZ,
+    token_type VARCHAR(50),
+    scope TEXT,
     created_at TIMESTAMPTZ NOT NULL,
     UNIQUE(provider, provider_user_id)
 );
 
 CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
+CREATE INDEX idx_oauth_accounts_provider ON oauth_accounts(provider, provider_user_id);
