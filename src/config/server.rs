@@ -4,7 +4,7 @@ use serde::Deserialize;
 ///
 /// Contains the protocol, host, and port settings for the application server.
 /// Used to generate bind addresses and public URLs.
-#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct ServerConfig {
     protocol: String,
     host: String,

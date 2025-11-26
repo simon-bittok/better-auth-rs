@@ -1,3 +1,4 @@
+#![allow(clippy::missing_const_for_fn)]
 use std::{
     env::VarError,
     error::Error as _,

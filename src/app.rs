@@ -11,6 +11,12 @@ use super::Result;
 pub struct App;
 
 impl App {
+    /// Runst the App
+    ///
+    /// # Errors
+    /// * If the app fails to start
+    /// * TCP Listener fails to bind
+    /// * Configuration loading fails
     pub async fn run() -> Result<()> {
         let config = Config::load()?;
 

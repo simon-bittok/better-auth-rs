@@ -1,13 +1,14 @@
+#![allow(clippy::missing_const_for_fn)]
 use serde::Deserialize;
 use sqlx::{ConnectOptions, PgPool, migrate::Migrator, postgres::PgConnectOptions};
 use tracing::log::LevelFilter;
 
 use crate::config::ConfigResult;
 
-/// Configuration for PostgreSQL database connections.
+/// Configuration for `PostgreSQL` database connections.
 ///
 /// This struct holds all necessary connection parameters for establishing
-/// a connection to a PostgreSQL database. It supports both URI-based and
+/// a connection to a `PostgreSQL` database. It supports both URI-based and
 /// options-based connection methods.
 ///
 /// # Fields
@@ -55,26 +56,32 @@ pub struct DatabaseConfig {
 }
 
 impl DatabaseConfig {
+    #[must_use]
     pub fn uri(&self) -> &str {
         &self.uri
     }
 
+    #[must_use]
     pub fn protocol(&self) -> &str {
         &self.protocol
     }
 
+    #[must_use]
     pub fn user(&self) -> &str {
         &self.user
     }
 
+    #[must_use]
     pub fn password(&self) -> &str {
         &self.password
     }
 
+    #[must_use]
     pub fn host(&self) -> &str {
         &self.host
     }
 
+    #[must_use]
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -84,7 +91,7 @@ impl DatabaseConfig {
         self.port
     }
 
-    /// Establishes a lazy PostgreSQL connection pool using individual connection options.
+    /// Establishes a lazy `PostgreSQL` connection pool using individual connection options.
     ///
     /// This method constructs a connection using the individual configuration fields
     /// (host, username, password, database name, and port) rather than a connection URI.
@@ -128,7 +135,7 @@ impl DatabaseConfig {
         PgPool::connect_lazy_with(options)
     }
 
-    /// Establishes a lazy PostgreSQL connection pool using the connection URI.
+    /// Establishes a lazy `PostgreSQL` connection pool using the connection URI.
     ///
     /// This method creates a connection pool using the full connection URI string
     /// stored in the configuration. The connection pool is created lazily, meaning
@@ -161,18 +168,28 @@ impl DatabaseConfig {
         PgPool::connect_lazy(&self.uri).map_err(Into::into)
     }
 
+    #[must_use]
     pub fn truncate(&self) -> bool {
         self.truncate
     }
 
+    #[must_use]
     pub fn recreate(&self) -> bool {
         self.recreate
     }
 
+    #[must_use]
     pub fn auto_migrate(&self) -> bool {
         self.auto_migrate
     }
 
+    /// Initializes the database by applying migrations based on the configuration.
+    ///
+    /// # Errors
+    /// This function will return an error if:
+    /// - The database connection cannot be established.
+    /// - Migrations fail to run or undo.
+    #[allow(clippy::cast_possible_wrap)]
     pub async fn init(&self) -> ConfigResult<()> {
         let pool = self.connect_using_options().await;
         let migrator = Migrator::new(std::path::Path::new("migrations")).await?;

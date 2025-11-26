@@ -89,7 +89,7 @@ pub enum ConfigError {
     /// Wraps the `sqlx::migrate::MigrateError`, which occurs when:
     /// - The migration folder is missing
     /// - The SQL file contains errors
-    /// -  DATABASE_URL is not set
+    /// -  `DATABASE_URL` is not set
     ///
     /// Maybe returned by `DatabaseConfig::migrate()` function.
     #[error(transparent)]
