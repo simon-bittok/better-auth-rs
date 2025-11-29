@@ -133,6 +133,14 @@ pub enum ConfigError {
     /// once at application startup.
     #[error(transparent)]
     TryInit(#[from] TryInitError),
+
+    /// Errors related to JSON Web Tokens (JWT).
+    ///
+    /// Wraps `jsonwebtoken::errors::Error`, which can occur during:
+    /// - Token encoding and decoding
+    /// - Key parsing errors
+    #[error(transparent)]
+    JsonWebToken(#[from] jsonwebtoken::errors::Error),
 }
 
 pub type ConfigResult<T, E = ConfigError> = std::result::Result<T, E>;

@@ -1,5 +1,5 @@
 use argon2::{
-    Argon2, PasswordHasher,
+    Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
     password_hash::{SaltString, rand_core::OsRng},
 };
 use chrono::{DateTime, FixedOffset};
@@ -26,7 +26,12 @@ pub struct UserModel {
 }
 
 impl UserModel {
-    pub async fn register_user<'e, C>(db: &C, params: RegisterUser<'_>) -> ModelResult<Self>
+    #[tracing::instrument(
+        name = "Registering a new user in the database",
+        skip(db, params),
+        fields(email = %params.email())
+    )]
+    pub async fn register_user<'e, C>(db: &C, params: &RegisterUser<'_>) -> ModelResult<Self>
     where
         for<'a> &'a C: Executor<'e, Database = Postgres>,
     {
@@ -47,6 +52,35 @@ impl UserModel {
 
         Ok(new_user)
     }
+
+    pub async fn find_user_by_email<'e, C>(db: &C, email: &str) -> ModelResult<Option<Self>>
+    where
+        for<'a> &'a C: Executor<'e, Database = Postgres>,
+    {
+        let user = sqlx::query_as(
+            r"
+            SELECT * FROM users WHERE email = $1
+        ",
+        )
+        .bind(email.trim())
+        .fetch_optional(db)
+        .await?;
+
+        Ok(user)
+    }
+
+    pub fn verify_password(&self, password: &str) -> ModelResult<()> {
+        let stored_hash = match &self.password_hash {
+            Some(hash) => hash,
+            None => return Err(ModelError::InvalidCredentials),
+        };
+
+        let parsed_hash = PasswordHash::new(&stored_hash)?;
+
+        Argon2::default().verify_password(password.as_bytes(), &parsed_hash)?;
+
+        Ok(())
+    }
 }
 
 fn hash_password(password: &str) -> ModelResult<String> {
@@ -57,4 +91,38 @@ fn hash_password(password: &str) -> ModelResult<String> {
         .hash_password(password.as_bytes(), &salt)
         .map_err(ModelError::PasswordHash)?
         .to_string())
+}
+
+impl UserModel {
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+
+    pub fn email(&self) -> &str {
+        &self.email
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn avatar_url(&self) -> Option<&str> {
+        self.avatar_url.as_deref()
+    }
+
+    pub fn created_at(&self) -> DateTime<FixedOffset> {
+        self.created_at
+    }
+
+    pub fn updated_at(&self) -> DateTime<FixedOffset> {
+        self.updated_at
+    }
+
+    pub fn is_email_verified(&self) -> bool {
+        self.email_verified
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.is_active
+    }
 }

@@ -1,3 +1,5 @@
+mod response;
+
 use crate::{config::ConfigError, models, validator};
 
 #[derive(Debug, thiserror::Error)]

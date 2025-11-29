@@ -1,6 +1,10 @@
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::PgPool;
 
-use crate::config::Config;
+use crate::{
+    Result,
+    config::{AuthConfig, Config, RsaJwtConfig},
+};
 
 /// Shared application state container.
 ///
@@ -92,6 +96,7 @@ use crate::config::Config;
 pub struct AppContext {
     config: Config,
     db: PgPool,
+    auth: AuthContext,
 }
 
 impl AppContext {
@@ -103,12 +108,82 @@ impl AppContext {
         &self.db
     }
 
-    pub async fn from_config(config: &Config) -> Self {
+    /// Creates a new `AppContext` from the given `Config`.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if .
+    /// * Database connection pool cannot be established
+    /// * JWT keys cannot be loaded from the specified files
+    pub async fn from_config(config: &Config) -> Result<Self> {
         let db = config.database().connect_using_options().await;
+        let auth = AuthContext::new(config.auth())?;
 
-        Self {
+        Ok(Self {
             config: config.clone(),
             db,
-        }
+            auth,
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct AuthContext {
+    pub(crate) access: RsaJwtContext,
+    pub(crate) refresh: RsaJwtContext,
+}
+
+impl AuthContext {
+    /// Creates a new `AuthContext` from the given `AuthConfig`.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if .
+    /// * The encoding or decoding keys cannot be created from the provided key files.
+    pub fn new(config: &AuthConfig) -> Result<Self> {
+        let access = RsaJwtContext::new(config.access())?;
+        let refresh = RsaJwtContext::new(config.refresh())?;
+
+        Ok(Self { access, refresh })
+    }
+
+    pub fn access(&self) -> &RsaJwtContext {
+        &self.access
+    }
+
+    pub fn refresh(&self) -> &RsaJwtContext {
+        &self.refresh
+    }
+}
+
+#[derive(Clone)]
+pub struct RsaJwtContext {
+    pub(crate) encoding_key: EncodingKey,
+    pub(crate) decoding_key: DecodingKey,
+    pub(crate) exp: i64,
+}
+
+impl RsaJwtContext {
+    pub fn new(config: &RsaJwtConfig) -> Result<Self> {
+        let encoding_key = config.encoding_key()?;
+        let decoding_key = config.decoding_key()?;
+
+        Ok(Self {
+            encoding_key,
+            decoding_key,
+            exp: config.exp,
+        })
+    }
+
+    pub fn encoding_key(&self) -> &EncodingKey {
+        &self.encoding_key
+    }
+
+    pub fn decoding_key(&self) -> &DecodingKey {
+        &self.decoding_key
+    }
+
+    pub fn exp(&self) -> i64 {
+        self.exp
     }
 }

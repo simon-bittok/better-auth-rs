@@ -7,8 +7,8 @@ CREATE TABLE users (
     avatar_url TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     email_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_users_email ON users(email);
@@ -23,7 +23,7 @@ CREATE TABLE oauth_accounts (
     expires_at TIMESTAMPTZ,
     token_type VARCHAR(50),
     scope TEXT,
-    created_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(provider, provider_user_id)
 );
 

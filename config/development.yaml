@@ -27,3 +27,13 @@ database:
   ##  or recreate the entire database, both resulting in data losses
   truncate: false
   recreate: false
+
+auth:
+  access:
+    private_key: security/keys/dev/access_key.pem
+    public_key: security/keys/dev/access_key_pub.pem
+    exp: 900 # 15 Minutes
+  refresh:
+    private_key: security/keys/dev/refresh_key.pem
+    public_key: security/keys/dev/refresh_key_pub.pem
+    exp: 604800 # 7 Days

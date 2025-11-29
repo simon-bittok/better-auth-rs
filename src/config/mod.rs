@@ -1,4 +1,5 @@
 #![allow(clippy::missing_const_for_fn)]
+mod auth;
 mod db;
 mod error;
 mod server;
@@ -9,6 +10,7 @@ use std::path::PathBuf;
 use serde::Deserialize;
 
 pub use self::{
+    auth::{AuthConfig, RsaJwtConfig},
     db::DatabaseConfig,
     error::{ConfigError, ConfigResult},
     server::ServerConfig,
@@ -52,6 +54,16 @@ pub use self::{
 ///   host: "localhost"
 ///   name: "db"
 ///   port: 5432
+///
+/// auth:
+///  access:
+///    private_key: "path/to/access_private.pem"
+///    public_key: "path/to/access_public.pem"
+///    exp: 900
+/// refresh:
+///   private_key: "path/to/refresh_private.pem"
+///   public_key: "path/to/refresh_public.pem"
+///   exp: 604800
 /// ```
 ///
 /// # Examples
@@ -81,6 +93,7 @@ pub struct Config {
     server: ServerConfig,
     logger: Logger,
     database: DatabaseConfig,
+    auth: AuthConfig,
 }
 
 impl Config {
@@ -220,6 +233,11 @@ impl Config {
     #[must_use]
     pub fn database(&self) -> &DatabaseConfig {
         &self.database
+    }
+
+    #[must_use]
+    pub fn auth(&self) -> &AuthConfig {
+        &self.auth
     }
 }
 
